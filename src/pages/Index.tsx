@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
-type Page = "home" | "features" | "pricing" | "cabinet" | "profile" | "editor";
+type Page = "home" | "features" | "pricing" | "cabinet" | "profile" | "editor" | "chatbots";
+
+const AI_CHAT_URL = "https://functions.poehali.dev/64fb0c10-f9fa-4e32-8819-0778bd03a604";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/fd7992d4-08db-479d-812a-5db55e13c405/files/1996794a-75d3-40f7-b8df-10dd79bd3405.jpg";
 
@@ -178,68 +180,419 @@ function NavBar({ active, setPage }: { active: Page; setPage: (p: Page) => void 
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  // Закрываем меню при смене страницы
+  const handleNav = (id: Page) => {
+    setPage(id);
+    setMenuOpen(false);
+  };
+
   const navItems: { id: Page; label: string; icon: string }[] = [
     { id: "home", label: "Главная", icon: "Home" },
     { id: "features", label: "Возможности", icon: "Sparkles" },
     { id: "pricing", label: "Тарифы", icon: "CreditCard" },
-    { id: "editor", label: "ИИ-редактор", icon: "Wand2" },
+    { id: "chatbots", label: "Чат-боты", icon: "MessageCircle" },
+    { id: "editor", label: "ИИ-фото", icon: "Wand2" },
     { id: "cabinet", label: "Кабинет", icon: "LayoutDashboard" },
     { id: "profile", label: "Профиль", icon: "User" },
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-black/20" : ""}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <button onClick={() => setPage("home")} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg btn-neon flex items-center justify-center">
-              <Icon name="Zap" size={16} className="text-white" />
-            </div>
-            <span className="font-montserrat font-extrabold text-lg text-white">
-              Neural<span className="gradient-text">Pay</span>
-            </span>
-          </button>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || menuOpen ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-black/20" : ""}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <button onClick={() => handleNav("home")} className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg btn-neon flex items-center justify-center">
+                <Icon name="Zap" size={16} className="text-white" />
+              </div>
+              <span className="font-montserrat font-extrabold text-lg text-white">
+                Neural<span className="gradient-text">Pay</span>
+              </span>
+            </button>
 
-          <div className="hidden md:flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <button key={item.id} onClick={() => setPage(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  active === item.id
-                    ? "bg-primary/15 text-primary border border-primary/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                } ${item.id === "editor" ? "text-violet-400 hover:text-violet-300" : ""}`}
-              >
-                <Icon name={item.icon} size={14} />
-                {item.label}
+            <div className="hidden lg:flex items-center gap-0.5">
+              {navItems.map((item) => (
+                <button key={item.id} onClick={() => handleNav(item.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    active === item.id
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  }`}
+                >
+                  <Icon name={item.icon} size={14} />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleNav("profile")} className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg btn-neon text-white text-sm font-semibold">
+                Войти
               </button>
-            ))}
+              <button className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-white transition-colors" onClick={() => setMenuOpen(!menuOpen)}>
+                <Icon name={menuOpen ? "X" : "Menu"} size={22} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Мобильное меню — отдельный слой поверх всего */}
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed top-16 left-0 right-0 z-40 lg:hidden bg-background/98 backdrop-blur-xl border-b border-border shadow-2xl shadow-black/40">
+            <div className="max-w-7xl mx-auto px-4 py-3 pb-5">
+              <div className="grid grid-cols-2 gap-1.5">
+                {navItems.map((item) => (
+                  <button key={item.id} onClick={() => handleNav(item.id)}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
+                      active === item.id
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/50"
+                    }`}>
+                    <Icon name={item.icon} size={18} />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => handleNav("profile")}
+                className="w-full mt-3 btn-neon text-white font-semibold py-3 rounded-xl text-sm">
+                Войти в аккаунт
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+// ─── ChatBots Page ────────────────────────────────────────────────────────────
+const CHATBOTS = [
+  {
+    id: "gpt4o",
+    name: "ChatGPT (GPT-4o)",
+    avatar: "🤖",
+    color: "blue",
+    desc: "Самая умная модель OpenAI — отвечает на любые вопросы, пишет код, анализирует",
+    canImage: true,
+    imageModel: "dall-e-3",
+    model: "gpt-4o",
+    placeholder: "Напиши что-нибудь или попроси сгенерировать картинку...",
+    systemPrompt: "Ты ChatGPT — умный ИИ-ассистент от OpenAI. Отвечай развёрнуто и полезно на русском языке.",
+  },
+  {
+    id: "dalle",
+    name: "DALL-E 3",
+    avatar: "🎨",
+    color: "violet",
+    desc: "Генерация фотореалистичных изображений по текстовому описанию от OpenAI",
+    canImage: true,
+    imageModel: "dall-e-3",
+    model: "gpt-4o",
+    placeholder: "Опиши изображение, которое хочешь создать...",
+    systemPrompt: "Ты DALL-E 3 ассистент. Каждый запрос пользователя — это запрос на генерацию изображения. Отвечай кратко по-русски, что именно ты сгенерируешь.",
+    autoImage: true,
+  },
+  {
+    id: "gpt4mini",
+    name: "GPT-4o mini",
+    avatar: "⚡",
+    color: "cyan",
+    desc: "Быстрая и экономичная версия GPT-4o — идеально для простых задач",
+    canImage: true,
+    imageModel: "dall-e-2",
+    model: "gpt-4o-mini",
+    placeholder: "Задай любой вопрос — отвечу быстро...",
+    systemPrompt: "Ты GPT-4o mini — быстрый и точный ИИ-ассистент. Отвечай лаконично по-русски.",
+  },
+  {
+    id: "creative",
+    name: "Creative AI",
+    avatar: "✨",
+    color: "pink",
+    desc: "Специализируется на творческих задачах: сторителлинг, маркетинг, идеи",
+    canImage: true,
+    imageModel: "dall-e-3",
+    model: "gpt-4o",
+    placeholder: "Попроси придумать идею, слоган, историю...",
+    systemPrompt: "Ты творческий ИИ-ассистент. Специализируешься на копирайтинге, идеях, маркетинге и сторителлинге. Будь креативным и вдохновляющим. Отвечай по-русски.",
+  },
+];
+
+type ChatMsg = { role: "user" | "assistant"; content: string; imageUrl?: string; isImage?: boolean; loading?: boolean };
+
+function ChatBotsPage() {
+  const [activeBotId, setActiveBotId] = useState(CHATBOTS[0].id);
+  const [chats, setChats] = useState<Record<string, ChatMsg[]>>({});
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [genMode, setGenMode] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const bot = CHATBOTS.find((b) => b.id === activeBotId)!;
+  const messages: ChatMsg[] = chats[activeBotId] || [];
+
+  const colorMap: Record<string, { border: string; bg: string; text: string; badge: string; bubble: string }> = {
+    blue: { border: "glow-border-blue", bg: "bg-blue-500/10", text: "text-blue-400", badge: "bg-blue-500/20 text-blue-300", bubble: "bg-blue-600" },
+    violet: { border: "glow-border-violet", bg: "bg-violet-500/10", text: "text-violet-400", badge: "bg-violet-500/20 text-violet-300", bubble: "bg-violet-600" },
+    cyan: { border: "glow-border-cyan", bg: "bg-cyan-500/10", text: "text-cyan-400", badge: "bg-cyan-500/20 text-cyan-300", bubble: "bg-cyan-600" },
+    pink: { border: "border border-pink-500/30", bg: "bg-pink-500/10", text: "text-pink-400", badge: "bg-pink-500/20 text-pink-300", bubble: "bg-pink-600" },
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    setGenMode(bot.autoImage ?? false);
+  }, [activeBotId, bot.autoImage]);
+
+  const addMsg = (botId: string, msg: ChatMsg) => {
+    setChats((prev) => ({ ...prev, [botId]: [...(prev[botId] || []), msg] }));
+  };
+
+  const updateLastMsg = (botId: string, patch: Partial<ChatMsg>) => {
+    setChats((prev) => {
+      const msgs = [...(prev[botId] || [])];
+      if (msgs.length > 0) msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], ...patch };
+      return { ...prev, [botId]: msgs };
+    });
+  };
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+    setInput("");
+    setSending(true);
+
+    const shouldGenerateImage = genMode || bot.autoImage;
+    addMsg(bot.id, { role: "user", content: text });
+    addMsg(bot.id, { role: "assistant", content: "", loading: true });
+
+    try {
+      if (shouldGenerateImage) {
+        // Генерируем изображение
+        const res = await fetch(AI_CHAT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "generate_image", prompt: text, model: bot.imageModel, style: "vivid" }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          updateLastMsg(bot.id, { content: data.revised_prompt || "Изображение сгенерировано", imageUrl: data.url, isImage: true, loading: false });
+        } else {
+          updateLastMsg(bot.id, { content: data.error || "Ошибка генерации. Проверьте API ключ.", loading: false });
+        }
+      } else {
+        // Обычный чат
+        const history = (chats[bot.id] || [])
+          .filter((m) => !m.loading && m.content)
+          .map((m) => ({ role: m.role, content: m.content }));
+        history.push({ role: "user", content: text });
+
+        const res = await fetch(AI_CHAT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "chat", model: bot.model, messages: history, system: bot.systemPrompt }),
+        });
+        const data = await res.json();
+        updateLastMsg(bot.id, { content: data.reply || data.error || "Ошибка. Проверьте API ключ.", loading: false });
+      }
+    } catch {
+      updateLastMsg(bot.id, { content: "Ошибка подключения к серверу.", loading: false });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const c = colorMap[bot.color];
+
+  return (
+    <div className="min-h-screen pt-20 pb-0 flex flex-col" style={{ height: "100dvh" }}>
+      <div className="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 gap-5 pb-4" style={{ minHeight: 0 }}>
+
+        {/* Sidebar — боты */}
+        <div className="hidden md:flex flex-col w-64 shrink-0 gap-2 pt-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1 px-1">Выбери бота</p>
+          {CHATBOTS.map((b) => {
+            const bc = colorMap[b.color];
+            return (
+              <button key={b.id} onClick={() => setActiveBotId(b.id)}
+                className={`text-left p-4 rounded-xl border transition-all ${
+                  activeBotId === b.id ? `${bc.bg} ${bc.border}` : "border-border/40 hover:border-border/70 bg-transparent hover:bg-white/3"
+                }`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl">{b.avatar}</span>
+                  <div>
+                    <div className={`text-sm font-semibold ${activeBotId === b.id ? "text-white" : "text-foreground"}`}>{b.name}</div>
+                    {b.canImage && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${bc.badge}`}>🖼 Фото</span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Chat window */}
+        <div className={`flex-1 flex flex-col card-glass rounded-2xl ${c.border} overflow-hidden min-h-0`}>
+          {/* Chat header */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{bot.avatar}</span>
+              <div>
+                <div className="font-semibold text-white text-sm">{bot.name}</div>
+                <div className="text-xs text-muted-foreground">{bot.desc.slice(0, 50)}...</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {bot.canImage && (
+                <button onClick={() => setGenMode(!genMode)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    genMode ? `${c.bg} ${c.text} border ${c.border}` : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                  }`}>
+                  <Icon name="Image" size={13} />
+                  {genMode ? "Режим: Фото" : "Режим: Чат"}
+                </button>
+              )}
+              <button onClick={() => setChats((prev) => ({ ...prev, [bot.id]: [] }))}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors" title="Очистить чат">
+                <Icon name="Trash2" size={15} />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button onClick={() => setPage("profile")} className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg btn-neon text-white text-sm font-semibold">
-              Войти
-            </button>
-            <button className="md:hidden p-2 rounded-lg text-muted-foreground" onClick={() => setMenuOpen(!menuOpen)}>
-              <Icon name={menuOpen ? "X" : "Menu"} size={20} />
-            </button>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
+            {messages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-center gap-4 py-10">
+                <span className="text-6xl">{bot.avatar}</span>
+                <div>
+                  <p className="font-semibold text-white text-lg">{bot.name}</p>
+                  <p className="text-muted-foreground text-sm mt-1 max-w-xs">{bot.desc}</p>
+                </div>
+                {bot.canImage && (
+                  <div className="flex gap-2 flex-wrap justify-center">
+                    {["Нарисуй закат на море", "Сгенерируй кот-астронавт", "Футуристический город"].map((s) => (
+                      <button key={s} onClick={() => { setInput(s); setGenMode(true); }}
+                        className={`text-xs px-3 py-1.5 rounded-full ${c.bg} ${c.text} border ${c.border} hover:opacity-80 transition-opacity`}>
+                        🖼 {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2 flex-wrap justify-center">
+                  {["Привет! Что ты умеешь?", "Помоги с идеей для бизнеса", "Объясни квантовую физику просто"].map((s) => (
+                    <button key={s} onClick={() => setInput(s)}
+                      className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground border border-border hover:text-foreground hover:border-border/80 transition-all">
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                {msg.role === "assistant" && (
+                  <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center text-base shrink-0 mt-0.5`}>
+                    {bot.avatar}
+                  </div>
+                )}
+                <div className={`max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
+                  {msg.loading ? (
+                    <div className="card-glass rounded-2xl rounded-tl-sm px-4 py-3 border border-border/50">
+                      <div className="flex gap-1 items-center">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </div>
+                    </div>
+                  ) : msg.isImage && msg.imageUrl ? (
+                    <div className={`card-glass rounded-2xl rounded-tl-sm border ${c.border} overflow-hidden`}>
+                      <img src={msg.imageUrl} alt="Generated" className="max-w-xs w-full rounded-xl" />
+                      <div className="px-3 py-2 flex items-center justify-between gap-3">
+                        <span className={`text-xs ${c.text}`}>✓ Сгенерировано {bot.name}</span>
+                        <a href={msg.imageUrl} download target="_blank" rel="noreferrer"
+                          className={`text-xs ${c.text} hover:opacity-70 flex items-center gap-1`}>
+                          <Icon name="Download" size={12} />Скачать
+                        </a>
+                      </div>
+                      {msg.content && <p className="px-3 pb-2 text-xs text-muted-foreground leading-relaxed">{msg.content}</p>}
+                    </div>
+                  ) : (
+                    <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-tr-sm"
+                        : "card-glass border border-border/50 text-foreground rounded-tl-sm"
+                    }`}>
+                      {msg.content}
+                    </div>
+                  )}
+                </div>
+                {msg.role === "user" && (
+                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">
+                    Я
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="px-4 py-3 border-t border-border/50 shrink-0">
+            {genMode && (
+              <div className={`flex items-center gap-1.5 text-xs ${c.text} mb-2 px-1`}>
+                <Icon name="Image" size={12} />
+                Режим генерации изображений активен
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                placeholder={bot.placeholder}
+                disabled={sending}
+                className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all disabled:opacity-50"
+              />
+              <button onClick={sendMessage} disabled={!input.trim() || sending}
+                className={`px-4 py-3 rounded-xl font-medium transition-all shrink-0 ${
+                  input.trim() && !sending ? "btn-neon text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed border border-border"
+                }`}>
+                {sending
+                  ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <Icon name={genMode ? "Image" : "Send"} size={18} />
+                }
+              </button>
+            </div>
           </div>
         </div>
 
-        {menuOpen && (
-          <div className="md:hidden pb-4 border-t border-border/50 pt-3">
-            {navItems.map((item) => (
-              <button key={item.id} onClick={() => { setPage(item.id); setMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium transition-all mb-1 ${
-                  active === item.id ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                }`}>
-                <Icon name={item.icon} size={18} />
-                {item.label}
-              </button>
-            ))}
+        {/* Mobile bot selector */}
+        <div className="md:hidden fixed bottom-20 left-4 right-4 z-30">
+          <div className="card-glass rounded-xl border border-border/80 p-2 flex gap-2 overflow-x-auto">
+            {CHATBOTS.map((b) => {
+              const bc = colorMap[b.color];
+              return (
+                <button key={b.id} onClick={() => setActiveBotId(b.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium shrink-0 transition-all ${
+                    activeBotId === b.id ? `${bc.bg} ${bc.text} border ${bc.border}` : "text-muted-foreground hover:text-foreground"
+                  }`}>
+                  <span>{b.avatar}</span>
+                  <span className="text-xs">{b.name.split(" ")[0]}</span>
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
       </div>
-    </nav>
+    </div>
   );
 }
 
@@ -1163,27 +1516,32 @@ export default function Index() {
   const [paymentPlan, setPaymentPlan] = useState<{ name: string; price: number; color: string } | null>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (page !== "chatbots") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-background font-golos">
+    <div className={`bg-background font-golos ${page === "chatbots" ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       <Particles />
       <NavBar active={page} setPage={setPage} />
       <main className="relative z-10">
         {page === "home" && <HomePage setPage={setPage} />}
         {page === "features" && <FeaturesPage setPage={setPage} />}
         {page === "pricing" && <PricingPage onPay={setPaymentPlan} />}
+        {page === "chatbots" && <ChatBotsPage />}
         {page === "editor" && <EditorPage />}
         {page === "cabinet" && <CabinetPage />}
         {page === "profile" && <ProfilePage />}
       </main>
-      <footer className="relative z-10 border-t border-border/30 py-8 text-center">
-        <p className="text-muted-foreground text-sm">
-          © 2026 NeuralPay · Умная ИИ-платформа ·
-          <span className="gradient-text font-medium ml-1">Летим к звёздам 🚀</span>
-        </p>
-      </footer>
+      {page !== "chatbots" && (
+        <footer className="relative z-10 border-t border-border/30 py-8 text-center">
+          <p className="text-muted-foreground text-sm">
+            © 2026 NeuralPay · Умная ИИ-платформа ·
+            <span className="gradient-text font-medium ml-1">Летим к звёздам 🚀</span>
+          </p>
+        </footer>
+      )}
 
       {paymentPlan && <PaymentModal plan={paymentPlan} onClose={() => setPaymentPlan(null)} />}
     </div>

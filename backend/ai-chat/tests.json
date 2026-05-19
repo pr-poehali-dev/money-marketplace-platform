@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Chat message",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "chat",
+        "model": "gpt-4o-mini",
+        "messages": [{"role": "user", "content": "Скажи одно слово: привет"}]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"reply": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
