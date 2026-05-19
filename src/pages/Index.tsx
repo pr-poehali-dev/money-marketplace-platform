@@ -334,11 +334,11 @@ function ChatBotsPage() {
   const bot = CHATBOTS.find((b) => b.id === activeBotId)!;
   const messages: ChatMsg[] = chats[activeBotId] || [];
 
-  const colorMap: Record<string, { border: string; bg: string; text: string; badge: string; bubble: string }> = {
-    blue: { border: "glow-border-blue", bg: "bg-blue-500/10", text: "text-blue-400", badge: "bg-blue-500/20 text-blue-300", bubble: "bg-blue-600" },
-    violet: { border: "glow-border-violet", bg: "bg-violet-500/10", text: "text-violet-400", badge: "bg-violet-500/20 text-violet-300", bubble: "bg-violet-600" },
-    cyan: { border: "glow-border-cyan", bg: "bg-cyan-500/10", text: "text-cyan-400", badge: "bg-cyan-500/20 text-cyan-300", bubble: "bg-cyan-600" },
-    pink: { border: "border border-pink-500/30", bg: "bg-pink-500/10", text: "text-pink-400", badge: "bg-pink-500/20 text-pink-300", bubble: "bg-pink-600" },
+  const colorMap: Record<string, { border: string; bg: string; bgStrong: string; text: string; badge: string; glow: string; gradient: string }> = {
+    blue:   { border: "border border-blue-500/40",   bg: "bg-blue-500/10",   bgStrong: "bg-blue-500/20",   text: "text-blue-400",   badge: "bg-blue-500/20 text-blue-300",   glow: "shadow-blue-500/20",   gradient: "from-blue-600 to-blue-400" },
+    violet: { border: "border border-violet-500/40", bg: "bg-violet-500/10", bgStrong: "bg-violet-500/20", text: "text-violet-400", badge: "bg-violet-500/20 text-violet-300", glow: "shadow-violet-500/25", gradient: "from-violet-600 to-purple-400" },
+    cyan:   { border: "border border-cyan-500/40",   bg: "bg-cyan-500/10",   bgStrong: "bg-cyan-500/20",   text: "text-cyan-400",   badge: "bg-cyan-500/20 text-cyan-300",   glow: "shadow-cyan-500/20",   gradient: "from-cyan-600 to-teal-400" },
+    pink:   { border: "border border-pink-500/40",   bg: "bg-pink-500/10",   bgStrong: "bg-pink-500/20",   text: "text-pink-400",   badge: "bg-pink-500/20 text-pink-300",   glow: "shadow-pink-500/20",   gradient: "from-pink-600 to-rose-400" },
   };
 
   useEffect(() => {
@@ -366,14 +366,11 @@ function ChatBotsPage() {
     if (!text || sending) return;
     setInput("");
     setSending(true);
-
     const shouldGenerateImage = genMode || bot.autoImage;
     addMsg(bot.id, { role: "user", content: text });
     addMsg(bot.id, { role: "assistant", content: "", loading: true });
-
     try {
       if (shouldGenerateImage) {
-        // Генерируем изображение
         const res = await fetch(AI_CHAT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -386,19 +383,17 @@ function ChatBotsPage() {
           updateLastMsg(bot.id, { content: data.error || "Ошибка генерации. Проверьте API ключ.", loading: false });
         }
       } else {
-        // Обычный чат
         const history = (chats[bot.id] || [])
           .filter((m) => !m.loading && m.content)
           .map((m) => ({ role: m.role, content: m.content }));
         history.push({ role: "user", content: text });
-
         const res = await fetch(AI_CHAT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "chat", model: bot.model, messages: history, system: bot.systemPrompt }),
         });
         const data = await res.json();
-        updateLastMsg(bot.id, { content: data.reply || data.error || "Ошибка. Проверьте API ключ.", loading: false });
+        updateLastMsg(bot.id, { content: data.reply || data.error || "Ошибка. Добавьте OPENAI_API_KEY в Ядро → Секреты.", loading: false });
       }
     } catch {
       updateLastMsg(bot.id, { content: "Ошибка подключения к серверу.", loading: false });
@@ -409,187 +404,270 @@ function ChatBotsPage() {
 
   const c = colorMap[bot.color];
 
-  return (
-    <div className="min-h-screen pt-20 pb-0 flex flex-col" style={{ height: "100dvh" }}>
-      <div className="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 gap-5 pb-4" style={{ minHeight: 0 }}>
+  const QUICK_PROMPTS: Record<string, { text: string; icon: string; isImage?: boolean }[]> = {
+    gpt4o:    [{ text: "Напиши план запуска продукта", icon: "Rocket" }, { text: "Объясни квантовые вычисления", icon: "Brain" }, { text: "Нарисуй киберпанк-город", icon: "Image", isImage: true }],
+    dalle:    [{ text: "Закат на Марсе в стиле аниме", icon: "Image", isImage: true }, { text: "Волк из северного сияния", icon: "Image", isImage: true }, { text: "Космонавт в джунглях", icon: "Image", isImage: true }],
+    gpt4mini: [{ text: "Переведи текст на английский", icon: "Languages" }, { text: "Напиши email коллеге", icon: "Mail" }, { text: "Логотип стартапа по ИИ", icon: "Image", isImage: true }],
+    creative: [{ text: "Слоган для кофейни", icon: "Coffee" }, { text: "Идея вирусного поста", icon: "TrendingUp" }, { text: "Обложка альбома в неоне", icon: "Image", isImage: true }],
+  };
 
-        {/* Sidebar — боты */}
-        <div className="hidden md:flex flex-col w-64 shrink-0 gap-2 pt-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1 px-1">Выбери бота</p>
-          {CHATBOTS.map((b) => {
-            const bc = colorMap[b.color];
-            return (
-              <button key={b.id} onClick={() => setActiveBotId(b.id)}
-                className={`text-left p-4 rounded-xl border transition-all ${
-                  activeBotId === b.id ? `${bc.bg} ${bc.border}` : "border-border/40 hover:border-border/70 bg-transparent hover:bg-white/3"
-                }`}>
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-2xl">{b.avatar}</span>
-                  <div>
-                    <div className={`text-sm font-semibold ${activeBotId === b.id ? "text-white" : "text-foreground"}`}>{b.name}</div>
-                    {b.canImage && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${bc.badge}`}>🖼 Фото</span>
-                    )}
-                  </div>
+  return (
+    <div className="flex flex-col" style={{ height: "100dvh" }}>
+      <div className="flex flex-1 overflow-hidden pt-16" style={{ minHeight: 0 }}>
+
+        {/* ── Sidebar ── */}
+        <div className="hidden md:flex flex-col w-72 shrink-0 border-r border-border/40 bg-background/60 backdrop-blur-xl overflow-y-auto">
+          <div className="px-4 pt-6 pb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/60 mb-3">ИИ-ассистенты</p>
+            <div className="space-y-1.5">
+              {CHATBOTS.map((b) => {
+                const bc = colorMap[b.color];
+                const isActive = activeBotId === b.id;
+                const msgCount = (chats[b.id] || []).filter(m => !m.loading).length;
+                return (
+                  <button key={b.id} onClick={() => setActiveBotId(b.id)}
+                    className={`w-full text-left px-3 py-3 rounded-xl transition-all duration-200 group ${
+                      isActive
+                        ? `${bc.bg} ${bc.border} shadow-lg ${bc.glow}`
+                        : "hover:bg-white/4 border border-transparent hover:border-border/30"
+                    }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-all ${
+                        isActive ? `bg-gradient-to-br ${bc.gradient} shadow-lg` : "bg-muted/50"
+                      }`}>
+                        {b.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-sm font-semibold truncate ${isActive ? "text-white" : "text-foreground/80"}`}>{b.name}</span>
+                          {msgCount > 0 && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${bc.badge}`}>{msgCount}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {b.canImage && <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${bc.badge} opacity-80`}>🖼 Фото</span>}
+                          <span className="text-[10px] text-muted-foreground/50 truncate">{b.model}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className={`text-xs leading-relaxed mt-2 line-clamp-2 transition-colors ${isActive ? "text-muted-foreground" : "text-muted-foreground/50 group-hover:text-muted-foreground/70"}`}>
+                      {b.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* API key hint */}
+          <div className="mx-4 mb-4 mt-auto">
+            <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
+              <div className="flex items-start gap-2">
+                <Icon name="Key" size={14} className="text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-amber-300 mb-1">Как активировать?</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Ядро → Секреты → <span className="text-amber-400 font-mono">OPENAI_API_KEY</span> → вставь ключ
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
-              </button>
-            );
-          })}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Chat window */}
-        <div className={`flex-1 flex flex-col card-glass rounded-2xl ${c.border} overflow-hidden min-h-0`}>
-          {/* Chat header */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 shrink-0">
+        {/* ── Chat area ── */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+
+          {/* Header */}
+          <div className={`flex items-center justify-between px-5 py-3 border-b border-border/40 bg-background/80 backdrop-blur-xl shrink-0`}>
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{bot.avatar}</span>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-xl shadow-lg shadow-${bot.color}-500/30`}>
+                {bot.avatar}
+              </div>
               <div>
-                <div className="font-semibold text-white text-sm">{bot.name}</div>
-                <div className="text-xs text-muted-foreground">{bot.desc.slice(0, 50)}...</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white text-sm">{bot.name}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${c.badge}`}>{bot.model}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-[10px] text-green-400">онлайн</span>
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">{bot.desc}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {bot.canImage && (
                 <button onClick={() => setGenMode(!genMode)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    genMode ? `${c.bg} ${c.text} border ${c.border}` : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                    genMode
+                      ? `${c.bg} ${c.text} ${c.border} shadow-sm`
+                      : "bg-muted/40 text-muted-foreground border-border/50 hover:text-foreground hover:bg-muted/60"
                   }`}>
-                  <Icon name="Image" size={13} />
-                  {genMode ? "Режим: Фото" : "Режим: Чат"}
+                  <Icon name={genMode ? "Image" : "MessageSquare"} size={12} />
+                  <span className="hidden sm:inline">{genMode ? "Генерация" : "Чат"}</span>
                 </button>
               )}
               <button onClick={() => setChats((prev) => ({ ...prev, [bot.id]: [] }))}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors" title="Очистить чат">
-                <Icon name="Trash2" size={15} />
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors border border-transparent hover:border-border/40"
+                title="Очистить чат">
+                <Icon name="RotateCcw" size={14} />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
-            {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center gap-4 py-10">
-                <span className="text-6xl">{bot.avatar}</span>
-                <div>
-                  <p className="font-semibold text-white text-lg">{bot.name}</p>
-                  <p className="text-muted-foreground text-sm mt-1 max-w-xs">{bot.desc}</p>
+          <div className="flex-1 overflow-y-auto min-h-0" style={{ background: "radial-gradient(ellipse at top, rgba(99,102,241,0.03) 0%, transparent 60%)" }}>
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-6 py-8">
+                <div className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-4xl shadow-2xl shadow-${bot.color}-500/30`}>
+                  {bot.avatar}
+                  <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-background flex items-center justify-center`}>
+                    <span className="text-[8px]">✓</span>
+                  </div>
                 </div>
-                {bot.canImage && (
-                  <div className="flex gap-2 flex-wrap justify-center">
-                    {["Нарисуй закат на море", "Сгенерируй кот-астронавт", "Футуристический город"].map((s) => (
-                      <button key={s} onClick={() => { setInput(s); setGenMode(true); }}
-                        className={`text-xs px-3 py-1.5 rounded-full ${c.bg} ${c.text} border ${c.border} hover:opacity-80 transition-opacity`}>
-                        🖼 {s}
+                <div>
+                  <h2 className="font-montserrat text-2xl font-bold text-white mb-2">{bot.name}</h2>
+                  <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">{bot.desc}</p>
+                </div>
+                <div className="w-full max-w-lg">
+                  <p className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-3">Попробуй спросить</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {(QUICK_PROMPTS[bot.id] || []).map((q) => (
+                      <button key={q.text}
+                        onClick={() => { setInput(q.text); if (q.isImage) setGenMode(true); }}
+                        className={`flex items-start gap-2.5 p-3 rounded-xl text-left text-xs transition-all border hover:scale-[1.02] ${
+                          q.isImage
+                            ? `${c.bg} ${c.border} ${c.text} hover:${c.bgStrong}`
+                            : "bg-muted/30 border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}>
+                        <Icon name={q.icon} size={14} className="shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{q.text}</span>
                       </button>
                     ))}
                   </div>
-                )}
-                <div className="flex gap-2 flex-wrap justify-center">
-                  {["Привет! Что ты умеешь?", "Помоги с идеей для бизнеса", "Объясни квантовую физику просто"].map((s) => (
-                    <button key={s} onClick={() => setInput(s)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground border border-border hover:text-foreground hover:border-border/80 transition-all">
-                      {s}
-                    </button>
-                  ))}
                 </div>
+              </div>
+            ) : (
+              <div className="px-4 py-6 space-y-6 max-w-4xl mx-auto w-full">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                    {msg.role === "assistant" ? (
+                      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-lg shrink-0 shadow-lg`}>
+                        {bot.avatar}
+                      </div>
+                    ) : (
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-lg">
+                        Я
+                      </div>
+                    )}
+                    <div className={`max-w-[78%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                      {msg.loading ? (
+                        <div className="px-4 py-3.5 rounded-2xl rounded-tl-sm bg-muted/40 border border-border/50 backdrop-blur-sm">
+                          <div className="flex gap-1.5 items-center">
+                            {[0, 150, 300].map((d) => (
+                              <div key={d} className={`w-2 h-2 rounded-full animate-bounce ${c.text.replace("text-", "bg-")}`}
+                                style={{ animationDelay: `${d}ms` }} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : msg.isImage && msg.imageUrl ? (
+                        <div className={`rounded-2xl rounded-tl-sm overflow-hidden border ${c.border} shadow-xl ${c.glow} shadow-lg`}>
+                          <img src={msg.imageUrl} alt="Generated" className="max-w-[320px] w-full block" />
+                          <div className={`px-4 py-2.5 flex items-center justify-between gap-3 ${c.bg}`}>
+                            <span className={`text-xs font-medium ${c.text} flex items-center gap-1.5`}>
+                              <Icon name="Sparkles" size={11} /> Сгенерировано DALL-E
+                            </span>
+                            <a href={msg.imageUrl} target="_blank" rel="noreferrer"
+                              className={`text-xs ${c.text} hover:opacity-70 flex items-center gap-1 transition-opacity`}>
+                              <Icon name="Download" size={11} />Скачать
+                            </a>
+                          </div>
+                          {msg.content && (
+                            <p className="px-4 py-2 text-xs text-muted-foreground leading-relaxed bg-background/50 border-t border-border/30">
+                              {msg.content}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap backdrop-blur-sm ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-tr-sm shadow-lg shadow-primary/20"
+                            : "bg-muted/40 border border-border/50 text-foreground rounded-tl-sm"
+                        }`}>
+                          {msg.content}
+                        </div>
+                      )}
+                      <span className="text-[10px] text-muted-foreground/40 px-1">
+                        {msg.role === "user" ? "Вы" : bot.name}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
             )}
-
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                {msg.role === "assistant" && (
-                  <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center text-base shrink-0 mt-0.5`}>
-                    {bot.avatar}
-                  </div>
-                )}
-                <div className={`max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                  {msg.loading ? (
-                    <div className="card-glass rounded-2xl rounded-tl-sm px-4 py-3 border border-border/50">
-                      <div className="flex gap-1 items-center">
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                    </div>
-                  ) : msg.isImage && msg.imageUrl ? (
-                    <div className={`card-glass rounded-2xl rounded-tl-sm border ${c.border} overflow-hidden`}>
-                      <img src={msg.imageUrl} alt="Generated" className="max-w-xs w-full rounded-xl" />
-                      <div className="px-3 py-2 flex items-center justify-between gap-3">
-                        <span className={`text-xs ${c.text}`}>✓ Сгенерировано {bot.name}</span>
-                        <a href={msg.imageUrl} download target="_blank" rel="noreferrer"
-                          className={`text-xs ${c.text} hover:opacity-70 flex items-center gap-1`}>
-                          <Icon name="Download" size={12} />Скачать
-                        </a>
-                      </div>
-                      {msg.content && <p className="px-3 pb-2 text-xs text-muted-foreground leading-relaxed">{msg.content}</p>}
-                    </div>
-                  ) : (
-                    <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-sm"
-                        : "card-glass border border-border/50 text-foreground rounded-tl-sm"
-                    }`}>
-                      {msg.content}
-                    </div>
-                  )}
-                </div>
-                {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">
-                    Я
-                  </div>
-                )}
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div className="px-4 py-3 border-t border-border/50 shrink-0">
+          <div className="px-4 py-3 border-t border-border/40 bg-background/80 backdrop-blur-xl shrink-0">
             {genMode && (
-              <div className={`flex items-center gap-1.5 text-xs ${c.text} mb-2 px-1`}>
-                <Icon name="Image" size={12} />
-                Режим генерации изображений активен
+              <div className={`flex items-center gap-1.5 text-[11px] ${c.text} mb-2 px-1 opacity-80`}>
+                <Icon name="Sparkles" size={11} />
+                Режим генерации изображений — опиши что хочешь увидеть
               </div>
             )}
-            <div className="flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                placeholder={bot.placeholder}
-                disabled={sending}
-                className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all disabled:opacity-50"
-              />
+            <div className="flex gap-2 max-w-4xl mx-auto">
+              <div className="flex-1 relative">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  placeholder={bot.placeholder}
+                  disabled={sending}
+                  className={`w-full bg-muted/40 border rounded-xl px-4 py-3 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-all disabled:opacity-50 backdrop-blur-sm ${
+                    input ? `${c.border} focus:ring-${bot.color}-500/30` : "border-border/50 focus:border-border"
+                  }`}
+                />
+                {input && (
+                  <button onClick={() => setInput("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    <Icon name="X" size={14} />
+                  </button>
+                )}
+              </div>
               <button onClick={sendMessage} disabled={!input.trim() || sending}
-                className={`px-4 py-3 rounded-xl font-medium transition-all shrink-0 ${
-                  input.trim() && !sending ? "btn-neon text-white" : "bg-muted/50 text-muted-foreground cursor-not-allowed border border-border"
+                className={`w-12 h-12 rounded-xl font-medium transition-all shrink-0 flex items-center justify-center shadow-lg ${
+                  input.trim() && !sending
+                    ? `bg-gradient-to-br ${c.gradient} text-white hover:opacity-90 hover:scale-105 shadow-${bot.color}-500/30`
+                    : "bg-muted/40 text-muted-foreground/40 cursor-not-allowed border border-border/30"
                 }`}>
                 {sending
-                  ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : <Icon name={genMode ? "Image" : "Send"} size={18} />
+                  ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <Icon name={genMode ? "Sparkles" : "Send"} size={16} />
                 }
               </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile bot selector */}
-        <div className="md:hidden fixed bottom-20 left-4 right-4 z-30">
-          <div className="card-glass rounded-xl border border-border/80 p-2 flex gap-2 overflow-x-auto">
-            {CHATBOTS.map((b) => {
-              const bc = colorMap[b.color];
-              return (
-                <button key={b.id} onClick={() => setActiveBotId(b.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium shrink-0 transition-all ${
-                    activeBotId === b.id ? `${bc.bg} ${bc.text} border ${bc.border}` : "text-muted-foreground hover:text-foreground"
-                  }`}>
-                  <span>{b.avatar}</span>
-                  <span className="text-xs">{b.name.split(" ")[0]}</span>
-                </button>
-              );
-            })}
-          </div>
+      {/* Mobile bot picker */}
+      <div className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-xl shrink-0">
+        <div className="flex overflow-x-auto px-3 py-2 gap-2 scrollbar-hide">
+          {CHATBOTS.map((b) => {
+            const bc = colorMap[b.color];
+            const isActive = activeBotId === b.id;
+            return (
+              <button key={b.id} onClick={() => setActiveBotId(b.id)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium shrink-0 transition-all border ${
+                  isActive ? `${bc.bg} ${bc.border} ${bc.text}` : "border-border/30 text-muted-foreground bg-transparent"
+                }`}>
+                <span className="text-base">{b.avatar}</span>
+                <span>{b.name.split(" ")[0]}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
