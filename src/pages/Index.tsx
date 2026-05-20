@@ -180,11 +180,7 @@ function NavBar({ active, setPage }: { active: Page; setPage: (p: Page) => void 
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Закрываем меню при смене страницы
-  const handleNav = (id: Page) => {
-    setPage(id);
-    setMenuOpen(false);
-  };
+  const handleNav = (id: Page) => { setPage(id); setMenuOpen(false); };
 
   const navItems: { id: Page; label: string; icon: string }[] = [
     { id: "home", label: "Главная", icon: "Home" },
@@ -193,71 +189,71 @@ function NavBar({ active, setPage }: { active: Page; setPage: (p: Page) => void 
     { id: "chatbots", label: "Чат-боты", icon: "MessageCircle" },
     { id: "editor", label: "ИИ-фото", icon: "Wand2" },
     { id: "cabinet", label: "Кабинет", icon: "LayoutDashboard" },
-    { id: "profile", label: "Профиль", icon: "User" },
   ];
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || menuOpen ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-black/20" : ""}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || menuOpen ? "bg-background/90 backdrop-blur-2xl border-b border-white/8 shadow-2xl shadow-black/30" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button onClick={() => handleNav("home")} className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg btn-neon flex items-center justify-center">
-                <Icon name="Zap" size={16} className="text-white" />
+            <button onClick={() => handleNav("home")} className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl btn-neon flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                <Icon name="Zap" size={17} className="text-white" />
               </div>
-              <span className="font-montserrat font-extrabold text-lg text-white">
+              <span className="font-montserrat font-extrabold text-xl text-white tracking-tight">
                 Neural<span className="gradient-text">Pay</span>
               </span>
             </button>
 
-            <div className="hidden lg:flex items-center gap-0.5">
+            <div className="hidden lg:flex items-center p-1 rounded-2xl bg-white/4 border border-white/8 backdrop-blur-sm gap-0.5">
               {navItems.map((item) => (
                 <button key={item.id} onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     active === item.id
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  }`}
-                >
+                      ? "bg-primary text-white shadow-lg shadow-primary/30"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/6"
+                  }`}>
                   <Icon name={item.icon} size={14} />
                   {item.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
-              <button onClick={() => handleNav("profile")} className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg btn-neon text-white text-sm font-semibold">
+            <div className="flex items-center gap-2">
+              <button onClick={() => handleNav("profile")}
+                className="hidden lg:flex items-center gap-2 px-5 py-2.5 rounded-xl btn-neon text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
+                <Icon name="User" size={14} />
                 Войти
               </button>
-              <button className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-white transition-colors" onClick={() => setMenuOpen(!menuOpen)}>
-                <Icon name={menuOpen ? "X" : "Menu"} size={22} />
+              <button className="lg:hidden w-10 h-10 rounded-xl bg-white/6 border border-white/10 flex items-center justify-center text-muted-foreground hover:text-white transition-colors" onClick={() => setMenuOpen(!menuOpen)}>
+                <Icon name={menuOpen ? "X" : "Menu"} size={20} />
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Мобильное меню — отдельный слой поверх всего */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setMenuOpen(false)} />
-          <div className="fixed top-16 left-0 right-0 z-40 lg:hidden bg-background/98 backdrop-blur-xl border-b border-border shadow-2xl shadow-black/40">
-            <div className="max-w-7xl mx-auto px-4 py-3 pb-5">
-              <div className="grid grid-cols-2 gap-1.5">
+          <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md lg:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="fixed top-16 left-3 right-3 z-40 lg:hidden bg-background/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 {navItems.map((item) => (
                   <button key={item.id} onClick={() => handleNav(item.id)}
                     className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
                       active === item.id
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/50"
+                        ? "bg-primary/20 text-primary border border-primary/30"
+                        : "text-muted-foreground hover:text-foreground bg-white/4 hover:bg-white/8 border border-white/6"
                     }`}>
-                    <Icon name={item.icon} size={18} />
+                    <Icon name={item.icon} size={17} />
                     {item.label}
                   </button>
                 ))}
               </div>
               <button onClick={() => handleNav("profile")}
-                className="w-full mt-3 btn-neon text-white font-semibold py-3 rounded-xl text-sm">
+                className="w-full btn-neon text-white font-semibold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                <Icon name="User" size={16} />
                 Войти в аккаунт
               </button>
             </div>
@@ -1061,103 +1057,187 @@ function getFilter(toolId: string, style: string): string {
 // ─── Home Page ────────────────────────────────────────────────────────────────
 function HomePage({ setPage }: { setPage: (p: Page) => void }) {
   const stats = [
-    { value: "2.4M+", label: "запросов в день" },
-    { value: "99.9%", label: "uptime" },
-    { value: "150+", label: "ИИ-моделей" },
-    { value: "12ms", label: "среднее время ответа" },
+    { value: "2.4M+", label: "запросов в день", icon: "Zap" },
+    { value: "99.9%", label: "uptime", icon: "Shield" },
+    { value: "150+", label: "ИИ-моделей", icon: "Brain" },
+    { value: "12ms", label: "среднее время ответа", icon: "Clock" },
   ];
   const features = [
-    { icon: "Brain", title: "GPT-4, Claude, Gemini", desc: "Доступ к топовым моделям в одном месте", color: "blue" },
-    { icon: "Wand2", title: "ИИ-редактор фото", desc: "8 нейросетей для редактирования изображений", color: "violet" },
-    { icon: "Shield", title: "Безопасность", desc: "Шифрование запросов и полная конфиденциальность", color: "cyan" },
-    { icon: "RefreshCw", title: "Автопродление", desc: "Подписка продлевается сама — никаких прерываний", color: "pink" },
+    { icon: "Brain", title: "GPT-4o, Claude, Gemini", desc: "Доступ ко всем топовым ИИ-моделям в одном окне", color: "blue", gradient: "from-blue-600 to-blue-400" },
+    { icon: "Wand2", title: "ИИ-редактор фото", desc: "8 нейросетей: фон, качество, стиль, генерация", color: "violet", gradient: "from-violet-600 to-purple-400" },
+    { icon: "Shield", title: "Безопасность", desc: "Шифрование end-to-end и полная конфиденциальность", color: "cyan", gradient: "from-cyan-600 to-teal-400" },
+    { icon: "RefreshCw", title: "Автопродление", desc: "Подписка продлевается сама — никаких прерываний", color: "pink", gradient: "from-pink-600 to-rose-400" },
   ];
+  const models = ["GPT-4o", "Claude 3.5", "Gemini Ultra", "DALL-E 3", "Llama 3", "Mistral", "Stable Diffusion", "Whisper"];
 
   return (
-    <div className="min-h-screen">
-      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+    <div className="min-h-screen overflow-hidden">
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center pt-16">
+        {/* Background layers */}
         <div className="absolute inset-0 z-0">
-          <img src={HERO_IMAGE} alt="AI Platform" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background/80" />
+          <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover opacity-15" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/30 to-background/60" />
         </div>
-        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 hidden lg:block z-0">
-          <div className="relative w-64 h-64">
-            <div className="absolute inset-0 rounded-full border border-blue-500/20 animate-spin-slow" />
-            <div className="absolute inset-8 rounded-full border border-violet-500/20 animate-spin-slow" style={{ animationDirection: "reverse", animationDuration: "15s" }} />
-            <div className="absolute inset-16 rounded-full bg-gradient-to-br from-blue-500/10 to-violet-500/10 animate-pulse-slow" />
+        {/* Glow blobs */}
+        <div className="absolute top-20 right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse-slow hidden lg:block" />
+        <div className="absolute bottom-32 right-40 w-64 h-64 bg-violet-600/12 rounded-full blur-3xl animate-pulse-slow hidden lg:block" style={{ animationDelay: "1s" }} />
+        {/* Orbits */}
+        <div className="absolute top-1/2 right-16 -translate-y-1/2 hidden xl:block z-0">
+          <div className="relative w-80 h-80">
+            <div className="absolute inset-0 rounded-full border border-blue-500/15 animate-spin-slow" />
+            <div className="absolute inset-10 rounded-full border border-violet-500/15 animate-spin-slow" style={{ animationDirection: "reverse", animationDuration: "18s" }} />
+            <div className="absolute inset-20 rounded-full border border-cyan-500/10 animate-spin-slow" style={{ animationDuration: "12s" }} />
+            <div className="absolute inset-[38%] rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 animate-pulse-slow shadow-lg shadow-blue-500/20" />
           </div>
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glow-border-blue bg-blue-500/10 text-blue-300 text-sm font-medium mb-8 animate-fade-in-up">
-              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              Новое поколение ИИ-платформ
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm font-medium mb-8 animate-fade-in-up shadow-lg shadow-blue-500/10">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shrink-0" />
+              Новое поколение ИИ-платформ · 2026
             </div>
-            <h1 className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-black leading-tight mb-6 animate-fade-in-up-delay-1">
+            <h1 className="font-montserrat text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] mb-6 animate-fade-in-up-delay-1">
               <span className="text-white">Мощь ИИ</span><br />
               <span className="gradient-text">без ограничений</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10 max-w-xl animate-fade-in-up-delay-2">
-              Единая платформа для работы со всеми топовыми ИИ-моделями.
-              ИИ-редактор фото, умные подписки с автопродлением и аналитика.
+            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-10 animate-fade-in-up-delay-2">
+              Единая платформа для GPT-4o, Claude, Gemini и 150+ моделей.
+              Чат-боты, редактор фото, API — всё в одной подписке.
             </p>
-            <div className="flex flex-wrap gap-4 animate-fade-in-up-delay-3">
-              <button onClick={() => setPage("pricing")} className="btn-neon text-white font-semibold px-8 py-4 rounded-xl text-base">
-                Начать бесплатно <Icon name="ArrowRight" size={18} className="inline ml-2" />
+            <div className="flex flex-wrap gap-3 animate-fade-in-up-delay-3">
+              <button onClick={() => setPage("pricing")}
+                className="btn-neon text-white font-bold px-8 py-4 rounded-2xl text-base flex items-center gap-2 shadow-xl shadow-primary/30">
+                Начать бесплатно
+                <Icon name="ArrowRight" size={18} />
               </button>
-              <button onClick={() => setPage("editor")} className="btn-ghost-neon text-foreground font-semibold px-8 py-4 rounded-xl text-base flex items-center gap-2">
-                <Icon name="Wand2" size={18} />
-                ИИ-редактор фото
+              <button onClick={() => setPage("chatbots")}
+                className="btn-ghost-neon text-foreground font-semibold px-8 py-4 rounded-2xl text-base flex items-center gap-2">
+                <Icon name="MessageCircle" size={18} />
+                Попробовать чат-бота
               </button>
             </div>
-            <div className="flex flex-wrap gap-8 mt-14 animate-fade-in-up-delay-4">
-              {stats.map((s) => (
-                <div key={s.label}>
-                  <div className="font-montserrat text-2xl font-bold gradient-text">{s.value}</div>
-                  <div className="text-muted-foreground text-sm mt-0.5">{s.label}</div>
-                </div>
-              ))}
+
+            {/* Marquee models */}
+            <div className="mt-12 animate-fade-in-up-delay-4">
+              <p className="text-xs text-muted-foreground/50 uppercase tracking-widest mb-3">Интегрировано с</p>
+              <div className="flex flex-wrap gap-2">
+                {models.map((m) => (
+                  <span key={m} className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground font-medium hover:border-primary/30 hover:text-foreground transition-colors cursor-default">
+                    {m}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="font-montserrat text-4xl font-bold text-white mb-4">
-            Почему выбирают <span className="gradient-text">NeuralPay</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">Всё что нужно для работы с ИИ — в одном месте</p>
+      {/* Stats */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((s) => (
+            <div key={s.label} className="card-glass rounded-2xl p-6 border border-white/6 text-center hover:border-primary/20 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                <Icon name={s.icon} size={18} className="text-primary" />
+              </div>
+              <div className="font-montserrat text-3xl font-black gradient-text mb-1">{s.value}</div>
+              <div className="text-muted-foreground text-sm">{s.label}</div>
+            </div>
+          ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      </section>
+
+      {/* Features */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-sm font-medium mb-5">
+            <Icon name="Sparkles" size={14} />
+            Почему выбирают NeuralPay
+          </div>
+          <h2 className="font-montserrat text-4xl sm:text-5xl font-bold text-white mb-4">
+            Всё что нужно для работы с <span className="gradient-text">ИИ</span>
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">В одном месте, с единой подпиской и без головной боли</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((f, i) => {
-            const colorMap: Record<string, string> = { blue: "glow-border-blue", violet: "glow-border-violet", cyan: "glow-border-cyan", pink: "border border-pink-500/30" };
-            const iconColor: Record<string, string> = { blue: "text-blue-400", violet: "text-violet-400", cyan: "text-cyan-400", pink: "text-pink-400" };
-            const bgColor: Record<string, string> = { blue: "bg-blue-500/10", violet: "bg-violet-500/10", cyan: "bg-cyan-500/10", pink: "bg-pink-500/10" };
+            const borderMap: Record<string, string> = { blue: "glow-border-blue", violet: "glow-border-violet", cyan: "glow-border-cyan", pink: "border border-pink-500/30" };
+            const textMap: Record<string, string> = { blue: "text-blue-400", violet: "text-violet-400", cyan: "text-cyan-400", pink: "text-pink-400" };
             return (
-              <div key={i} className={`card-glass rounded-2xl p-6 ${colorMap[f.color]} transition-all duration-300 hover:-translate-y-1 cursor-default`}>
-                <div className={`w-12 h-12 rounded-xl ${bgColor[f.color]} flex items-center justify-center mb-4`}>
-                  <Icon name={f.icon} size={24} className={iconColor[f.color]} />
+              <div key={i} className={`card-glass rounded-2xl p-6 ${borderMap[f.color]} transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default group`}>
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform`}>
+                  <Icon name={f.icon} size={26} className="text-white" />
                 </div>
-                <h3 className="font-semibold text-white mb-2">{f.title}</h3>
+                <h3 className="font-semibold text-white mb-2 text-base">{f.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
+                <div className={`mt-4 text-xs font-medium ${textMap[f.color]} flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                  Подробнее <Icon name="ArrowRight" size={11} />
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="text-center mb-14">
+          <h2 className="font-montserrat text-4xl font-bold text-white mb-4">Как это работает?</h2>
+          <p className="text-muted-foreground text-lg">Три шага до вашего личного ИИ-помощника</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          <div className="hidden md:block absolute top-10 left-1/6 right-1/6 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          {[
+            { step: "01", icon: "UserPlus", title: "Зарегистрируйся", desc: "Создай аккаунт за 30 секунд. Первые 7 дней бесплатно — карта не нужна.", color: "blue" },
+            { step: "02", icon: "CreditCard", title: "Выбери тариф", desc: "Старт, Про или Бизнес. Меняй или отменяй подписку в любой момент.", color: "violet" },
+            { step: "03", icon: "Zap", title: "Пользуйся", desc: "Чат-боты, редактор фото, API — всё доступно сразу после оплаты.", color: "cyan" },
+          ].map((s, i) => {
+            const borderMap: Record<string, string> = { blue: "border-blue-500/30", violet: "border-violet-500/30", cyan: "border-cyan-500/30" };
+            const textMap: Record<string, string> = { blue: "text-blue-400", violet: "text-violet-400", cyan: "text-cyan-400" };
+            const bgMap: Record<string, string> = { blue: "bg-blue-500/10", violet: "bg-violet-500/10", cyan: "bg-cyan-500/10" };
+            return (
+              <div key={i} className={`card-glass rounded-2xl p-7 border ${borderMap[s.color]} text-center relative`}>
+                <span className={`absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full ${bgMap[s.color]} ${textMap[s.color]} border ${borderMap[s.color]}`}>{s.step}</span>
+                <div className={`w-14 h-14 rounded-2xl ${bgMap[s.color]} flex items-center justify-center mx-auto mb-4`}>
+                  <Icon name={s.icon} size={26} className={textMap[s.color]} />
+                </div>
+                <h3 className="font-semibold text-white text-lg mb-2">{s.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CTA */}
       <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="card-glass rounded-3xl p-12 glow-border-violet relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-blue-500/5" />
-            <div className="relative z-10">
-              <h2 className="font-montserrat text-3xl sm:text-4xl font-bold text-white mb-4">Готов начать?</h2>
-              <p className="text-muted-foreground text-lg mb-8">Первые 7 дней — бесплатно. Без привязки карты.</p>
-              <button onClick={() => setPage("pricing")} className="btn-neon text-white font-semibold px-10 py-4 rounded-xl text-lg">
-                Выбрать тариф <Icon name="Zap" size={18} className="inline ml-2" />
-              </button>
+        <div className="max-w-4xl mx-auto">
+          <div className="relative card-glass rounded-3xl p-12 sm:p-16 overflow-hidden border border-violet-500/20">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/8 via-blue-600/5 to-cyan-600/8" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/30 bg-green-500/10 text-green-300 text-sm font-medium mb-6">
+                <Icon name="Gift" size={14} />
+                7 дней бесплатно — без привязки карты
+              </div>
+              <h2 className="font-montserrat text-4xl sm:text-5xl font-bold text-white mb-4">Готов начать?</h2>
+              <p className="text-muted-foreground text-xl mb-10 max-w-lg mx-auto">Присоединяйся к тысячам пользователей, которые уже работают с ИИ каждый день</p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <button onClick={() => setPage("pricing")}
+                  className="btn-neon text-white font-bold px-10 py-4 rounded-2xl text-lg flex items-center gap-2 shadow-2xl shadow-primary/30">
+                  <Icon name="Zap" size={20} />
+                  Выбрать тариф
+                </button>
+                <button onClick={() => setPage("features")}
+                  className="btn-ghost-neon text-foreground font-semibold px-8 py-4 rounded-2xl text-lg flex items-center gap-2">
+                  Узнать подробнее
+                  <Icon name="ChevronRight" size={18} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
